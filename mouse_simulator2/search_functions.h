@@ -1,5 +1,4 @@
 #pragma once
-#pragma once
 /*
  Name        : search_functions.h
  Description : 標準プログラムのsearch.cのうち，searchA()，searchB()関数内にある，
