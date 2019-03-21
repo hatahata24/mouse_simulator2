@@ -156,6 +156,7 @@
     <ClInclude Include="macro.h" />
     <ClInclude Include="map_2017_gakusei.h" />
     <ClInclude Include="map_2017_higashinihon.h" />
+    <ClInclude Include="map_2019_dentsu.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="search.h" />
     <ClInclude Include="search_functions.h" />
