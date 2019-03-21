@@ -454,18 +454,32 @@ void make_route()
 #define set_priority(A,B,C,D) do{priority[0]=A;priority[1]=B;priority[2]=C;priority[3]=D;}while(0)
 
 		if (m_dir == 0) {			// m_dir = N : N,E,S,W
-			set_priority(0, 1, 2, 3);
+			if (route_dir == 0) set_priority(0, 1, 2, 3);
+			if (route_dir == 1) set_priority(1, 2, 3, 0);
+			if (route_dir == 2) set_priority(2, 3, 0, 1);
+			if (route_dir == 3) set_priority(3, 0, 1, 2);
 		}
 		else if (m_dir == 1) {	// m_dir = E : E,S,W,N
-			set_priority(1, 2, 3, 0);
+			//set_priority(1, 2, 3, 0);
+			if (route_dir == 0) set_priority(1, 2, 3, 0);
+			if (route_dir == 1) set_priority(2, 3, 0, 1);
+			if (route_dir == 2) set_priority(3, 0, 1, 2);
+			if (route_dir == 3) set_priority(0, 1, 2, 3);
 		}
 		else if (m_dir == 2) {	// m_dir = S : S,W,N,E
-			set_priority(2, 3, 0, 1);
+			//set_priority(2, 3, 0, 1);
+			if (route_dir == 0) set_priority(2, 3, 0, 1);
+			if (route_dir == 1) set_priority(3, 0, 1, 2);
+			if (route_dir == 2) set_priority(0, 1, 2, 3);
+			if (route_dir == 3) set_priority(1, 2, 3, 0);
 		}
 		else if (m_dir == 3) {	// m_dir = W : W,N,E,S
-			set_priority(3, 0, 1, 2);
+			//set_priority(3, 0, 1, 2);
+			if (route_dir == 0) set_priority(3, 0, 1, 2);
+			if (route_dir == 1) set_priority(0, 1, 2, 3);
+			if (route_dir == 2) set_priority(1, 2, 3, 0);
+			if (route_dir == 3) set_priority(2, 3, 0, 1);
 		}
-		//set_priority(1, 0, 2, 3);
 
 		UCHAR j;
 		for (j = 0; j < 4; j++) {
