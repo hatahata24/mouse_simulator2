@@ -30,6 +30,9 @@ UCHAR smap[16][16];										//歩数マップ格納配列
 UCHAR wall_info;												//壁情報格納変数
 UCHAR m_dir;													//マウスの方向
 UCHAR m_step;													//歩数格納
+
+UCHAR m_step2;													//歩数格納
+
 UINT goal_x, goal_y;											//ゴール座標
 UCHAR route[256];											//最短経路格納配列
 UCHAR r_cnt;													//経路カウンタ
