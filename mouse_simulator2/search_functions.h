@@ -46,23 +46,24 @@ void searchA() {																		//一次走行　一番基本的な初期装備
 		case 0x44:
 			//turn_R90();										//右回転
 			turn_dir(DIR_TURN_R90);											//マイクロマウス内部位置情報でも右回転処理
-			//WAIT;												//安定するまで待機
+			//drive_wait;												//安定するまで待機
 			break;
 			//----180回転----
 		case 0x22:
 			//turn_180();										//180度回転
 			turn_dir(DIR_TURN_180);											//マイクロマウス内部位置情報でも180度回転処理
-			//WAIT;												//安定するまで待機
+			//drive_wait;												//安定するまで待機
 			break;
 			//----左折----
 		case 0x11:
 			//turn_L90();										//左回転
 			turn_dir(DIR_TURN_L90);											//マイクロマウス内部位置情報でも左回転処理
-			//WAIT;												//安定するまで待機
+			//drive_wait;										//安定するまで待機
 			break;
 		}
-
-		//a_section();										//前進する
+		//drive_wait;											//安定するまで待機
+		//one_section();										//前進する
+		//drive_wait;											//安定するまで待機
 		adv_pos();																		//マイクロマウス内部位置情報でも前進処理
 		get_wall_info();				// 探索シュミレータ用に追加
 		print_m_location();		// 探索シュミレータ用に追加
@@ -71,8 +72,8 @@ void searchA() {																		//一次走行　一番基本的な初期装備
 	} while ((PRELOC.AXIS.X != goal_x) || (PRELOC.AXIS.Y != goal_y));
 	//現在座標とgoal座標が等しくなるまで実行
 
-//ms_wait(2000);											//スタートでは***2秒以上***停止しなくてはならない
-//turn_180();													//180度回転
+	//ms_drive_wait(2000);											//スタートでは***2秒以上***停止しなくてはならない
+	//turn_180();													//180度回転
 	turn_dir(DIR_TURN_180);													//マイクロマウス内部位置情報でも180度回転処理
 }
 
