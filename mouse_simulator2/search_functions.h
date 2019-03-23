@@ -10,7 +10,7 @@
 #include "macro.h"
 #include "global.h"
 #include "search.h"
-
+int p = 0;
 
 /*===========================================================
 		探索系関数
@@ -34,13 +34,13 @@ void searchA() {																		//一次走行　一番基本的な初期装備
 	get_wall_info();																	//壁情報の初期化, 後壁はなくなる
 	write_map();																		//地図の初期化
 	make_smap();																	//歩数図の初期化
-	printf("modeを入力してください　\n");
+	//printf("modeを入力してください　\n");
 	make_route();																	//最短経路探索(route配列に動作が格納される)
 	
 	//ここ以降動作していない模様
+	//printf("modeを入力してください　\n");
+
 	
-	
-	printf("modeを入力してください　\n");
 	//====探索走行====
 	do {
 		//----進行----
@@ -74,6 +74,10 @@ void searchA() {																		//一次走行　一番基本的な初期装備
 		get_wall_info();				// 探索シュミレータ用に追加
 		print_m_location();		// 探索シュミレータ用に追加
 		conf_route();																	//最短経路で進行可能か判定
+
+		/*if ((PRELOC.AXIS.X == 2) && (PRELOC.AXIS.Y == 1)) {
+			p++;
+		}*/
 
 	} while ((PRELOC.AXIS.X != goal_x) || (PRELOC.AXIS.Y != goal_y));
 	//現在座標とgoal座標が等しくなるまで実行
@@ -426,7 +430,7 @@ void make_smap()
 	//====変数宣言====
 	UCHAR x, y;																			//for文用変数
 	UCHAR m_temp;																	//マップデータ一時保持
-	UCHAR m_temp2;																	//マップデータ一時保持
+	UCHAR m_temp_sample[16];
 
 	//====歩数マップのクリア====
 	for (y = 0; y <= 0x0f; y++) {													//各Y座標で実行
@@ -442,7 +446,6 @@ void make_smap()
 	m_step = 0;																			//現在記入した最大の歩数となる
 
 	//====歩数カウンタの重みづけ====
-	int s = 1;
 	int straight = 0;
 
 	//====自分の座標にたどり着くまでループ====
@@ -458,45 +461,74 @@ void make_smap()
 					}
 					//----北壁についての処理----
 					if (!(m_temp & 0x08) && y != 0x0f) {						//北壁がなく現在最北端でないとき
+					//if (!(map[y][x] & 0x08) && y != 0x0f) {						//北壁がなく現在最北端でないとき
 						if (smap[y + 1][x] == 0xff) {								//北側が未記入なら
-							smap[y + 1][x] = m_step + 5;						//次の歩数を書き込む
+							smap[y + 1][x] = m_step + 2;						//次の歩数を書き込む
 							
-							while ((y + 1 + straight) != 0x0f) {					//最北端に来るまで
-								straight++;
-								m_temp2 = map[y + straight][x];				//map配列からマップデータを取り出す
-								if (MF.FLAG.SCND) m_temp2 >>= 4;
-								if (!(m_temp & 0x08)) {								//北壁がないとき
-									if (smap[y + 1 + straight][x] == 0xff) {	//北側が未記入なら
-										smap[y + 1 + straight][x] = smap[y + straight][x] + 1;						//次の歩数を書き込む
+							for (int k = 1; k < 16-y; k++) {
+								m_temp_sample[k] = map[y + k][x];
+								if (MF.FLAG.SCND) m_temp_sample[k] >>= 4;
+								if (!(m_temp_sample[k] & 0x08) && (y + k) != 0x0f) {						//北壁がなく現在最北端でないとき
+									if (smap[y + k + 1][x] == 0xff) {								//北側が未記入なら
+										smap[y + k + 1][x] = smap[y + k][x] + 1;						//次の歩数を書き込む
 									}
 								}
+								else break;
 							}
-							straight = 0;
-							/*m_temp2 = map[y + 1][x];
-							if (MF.FLAG.SCND) m_temp2 >>= 4;
-							if (!(m_temp2 & 0x08) && (y + 1) != 0x0f) {						//北壁がなく現在最北端でないとき
-								if (smap[y + 2][x] == 0xff) {								//北側が未記入なら
-									smap[y + 2][x] = smap[y + 1][x] + 1;						//次の歩数を書き込む
-								}
-							}*/
 						}
 					}
 					//----東壁についての処理----
 					if (!(m_temp & 0x04) && x != 0x0f) {						//東壁がなく現在最東端でないとき
+					//if (!(map[y][x] & 0x40) && y != 0x0f) {						//東壁がなく現在最北端でないとき
 						if (smap[y][x + 1] == 0xff) {								//東側が未記入なら
-							smap[y][x + 1] = m_step + 5;						//次の歩数を書き込む
+							smap[y][x + 1] = m_step + 2;						//次の歩数を書き込む
+
+							for (int k = 1; k < 16 - x; k++) {
+								m_temp_sample[k] = map[y][x + k];
+								if (MF.FLAG.SCND) m_temp_sample[k] >>= 4;
+								if (!(m_temp_sample[k] & 0x04) && (x + k) != 0x0f) {						//北壁がなく現在最北端でないとき
+									if (smap[y][x + k + 1] == 0xff) {								//北側が未記入なら
+										smap[y][x + k + 1] = smap[y][x + k] + 1;						//次の歩数を書き込む
+									}
+								}
+								else break;
+							}
 						}
 					}
 					//----南壁についての処理----
 					if (!(m_temp & 0x02) && y != 0) {							//南壁がなく現在最南端でないとき
+					//if (!(map[y][x] & 0x02) && y != 0) {							//南壁がなく現在最南端でないとき
 						if (smap[y - 1][x] == 0xff) {								//南側が未記入なら
-							smap[y - 1][x] = m_step + 5;							//次の歩数を書き込む
+							smap[y - 1][x] = m_step + 2;							//次の歩数を書き込む
+
+							for (int k = 1; k < y; k++) {
+								m_temp_sample[k] = map[y - k][x];
+								if (MF.FLAG.SCND) m_temp_sample[k] >>= 4;
+								if (!(m_temp_sample[k] & 0x02) && (y - k) != 0x0f) {						//北壁がなく現在最北端でないとき
+									if (smap[y - k - 1][x] == 0xff) {								//北側が未記入なら
+										smap[y - k - 1][x] = smap[y - k][x] + 1;						//次の歩数を書き込む
+									}
+								}
+								else break;
+							}
 						}
 					}
 					//----西壁についての処理----
 					if (!(m_temp & 0x01) && x != 0) {							//西壁がなく現在最西端でないとき
+					//if (!(map[y][x] & 0x01) && x != 0) {							//西壁がなく現在最西端でないとき
 						if (smap[y][x - 1] == 0xff) {								//西側が未記入なら
-							smap[y][x - 1] = m_step + 5;							//次の歩数を書き込む
+							smap[y][x - 1] = m_step + 2;							//次の歩数を書き込む
+
+							for (int k = 1; k < x; k++) {
+								m_temp_sample[k] = map[y][x - k];
+								if (MF.FLAG.SCND) m_temp_sample[k] >>= 4;
+								if (!(m_temp_sample[k] & 0x01) && (x - k) != 0x0f) {						//北壁がなく現在最北端でないとき
+									if (smap[y][x - k - 1] == 0xff) {								//北側が未記入なら
+										smap[y][x - k - 1] = smap[y][x - k] + 1;						//次の歩数を書き込む
+									}
+								}
+								else break;
+							}
 						}
 					}
 				}
