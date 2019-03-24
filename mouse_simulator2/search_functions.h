@@ -425,7 +425,7 @@ void make_smap()
 	//====歩数マップのクリア====
 	for (y = 0; y <= 0x0f; y++) {													//各Y座標で実行
 		for (x = 0; x <= 0x0f; x++) {												//各X座標で実行
-			smap[y][x] = 0x02ff;															//未記入部分は歩数最大とする
+			smap[y][x] = 0x03e7;													//未記入部分は歩数最大とする
 		}
 	}
 
@@ -452,14 +452,14 @@ void make_smap()
 					}
 					//----北壁についての処理----
 					if (!(m_temp & 0x08) && y != 0x0f) {						//北壁がなく現在最北端でないとき
-						if (smap[y + 1][x] == 0x02ff) {							//北側が未記入なら
+						if (smap[y + 1][x] == 0x03e7) {							//北側が未記入なら
 							smap[y + 1][x] = smap[y][x] + turn;				//曲線分インクリメントした値を次のマスの歩数マップに書き込む
-							
+							//----直線優先処理----
 							for (int k = 1; k < 16-y; k++) {						//現在座標から見て北のマスすべてにおいて
 								m_temp_sample[k] = map[y + k][x];			//map配列からマップデータを取り出す
 								if (MF.FLAG.SCND) m_temp_sample[k] >>= 4;	//二次走行用のマップを作成する場合上位4bitを使うので4bit分右にシフトさせる
 								if (!(m_temp_sample[k] & 0x08) && (y + k) != 0x0f) {			//北壁がなく現在最北端でないとき
-									if (smap[y + k + 1][x] == 0x02ff) {								//北側が未記入なら
+									if (smap[y + k + 1][x] == 0x03e7) {								//北側が未記入なら
 										smap[y + k + 1][x] = smap[y + k][x] + straight;			//直線分インクリメントした値を次のマスの歩数マップに書き込む
 									}
 								}
@@ -469,14 +469,14 @@ void make_smap()
 					}
 					//----東壁についての処理----
 					if (!(m_temp & 0x04) && x != 0x0f) {						//東壁がなく現在最東端でないとき
-						if (smap[y][x + 1] == 0x02ff) {							//東側が未記入なら
+						if (smap[y][x + 1] == 0x03e7) {							//東側が未記入なら
 							smap[y][x + 1] = smap[y][x] + turn;				//曲線分インクリメントした値を次のマスの歩数マップに書き込む
-
+							//----直線優先処理----
 							for (int k = 1; k < 16 - x; k++) {					//現在座標から見て東のマスすべてにおいて
 								m_temp_sample[k] = map[y][x + k];			//map配列からマップデータを取り出す
 								if (MF.FLAG.SCND) m_temp_sample[k] >>= 4;	//二次走行用のマップを作成する場合上位4bitを使うので4bit分右にシフトさせる
 								if (!(m_temp_sample[k] & 0x04) && (x + k) != 0x0f) {			//東壁がなく現在最東端でないとき
-									if (smap[y][x + k + 1] == 0x02ff) {								//東側が未記入なら
+									if (smap[y][x + k + 1] == 0x03e7) {								//東側が未記入なら
 										smap[y][x + k + 1] = smap[y][x + k] + straight;			//直線分インクリメントした値を次のマスの歩数マップに書き込む
 									}
 								}
@@ -486,14 +486,14 @@ void make_smap()
 					}
 					//----南壁についての処理----
 					if (!(m_temp & 0x02) && y != 0) {							//南壁がなく現在最南端でないとき
-						if (smap[y - 1][x] == 0x02ff) {							//南側が未記入なら
+						if (smap[y - 1][x] == 0x03e7) {							//南側が未記入なら
 							smap[y - 1][x] = smap[y][x] + turn;				//曲線分インクリメントした値を次のマスの歩数マップに書き込む
-
+							//----直線優先処理----
 							for (int k = 1; k < y; k++) {							//現在座標から見て南のマスすべてにおいて
 								m_temp_sample[k] = map[y - k][x];			//map配列からマップデータを取り出す
 								if (MF.FLAG.SCND) m_temp_sample[k] >>= 4;	//二次走行用のマップを作成する場合上位4bitを使うので4bit分右にシフトさせる
 								if (!(m_temp_sample[k] & 0x02) && (y - k) != 0x0f) {			//南壁がなく現在最南端でないとき
-									if (smap[y - k - 1][x] == 0x02ff) {									//南側が未記入なら
+									if (smap[y - k - 1][x] == 0x03e7) {									//南側が未記入なら
 										smap[y - k - 1][x] = smap[y - k][x] + straight;			//直線分インクリメントした値を次のマスの歩数マップに書き込む
 									}
 								}
@@ -503,14 +503,14 @@ void make_smap()
 					}
 					//----西壁についての処理----
 					if (!(m_temp & 0x01) && x != 0) {							//西壁がなく現在最西端でないとき
-						if (smap[y][x - 1] == 0x02ff) {							//西側が未記入なら
+						if (smap[y][x - 1] == 0x03e7) {							//西側が未記入なら
 							smap[y][x - 1] = smap[y][x] + turn;				//次の歩数を書き込む
-
+							//----直線優先処理----
 							for (int k = 1; k < x; k++) {							//現在座標から見て西のマスすべてにおいて
 								m_temp_sample[k] = map[y][x - k];			//map配列からマップデータを取り出す
 								if (MF.FLAG.SCND) m_temp_sample[k] >>= 4;	//二次走行用のマップを作成する場合上位4bitを使うので4bit分右にシフトさせる
 								if (!(m_temp_sample[k] & 0x01) && (x - k) != 0x0f) {			//西壁がなく現在最西端でないとき
-									if (smap[y][x - k - 1] == 0x02ff) {									//西側が未記入なら
+									if (smap[y][x - k - 1] == 0x03e7) {									//西側が未記入なら
 										smap[y][x - k - 1] = smap[y][x - k] + straight;			//直線分インクリメントした値を次のマスの歩数マップに書き込む
 									}
 								}
@@ -523,7 +523,7 @@ void make_smap()
 		}
 		//====歩数カウンタのインクリメント====
 		m_step++;
-	} while (smap[PRELOC.AXIS.Y][PRELOC.AXIS.X] == 0x02ff);		//現在座標が未記入ではなくなるまで実行
+	} while (smap[PRELOC.AXIS.Y][PRELOC.AXIS.X] == 0x03e7);		//現在座標が未記入ではなくなるまで実行
 }
 
 
