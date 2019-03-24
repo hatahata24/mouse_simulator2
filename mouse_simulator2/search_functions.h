@@ -34,12 +34,7 @@ void searchA() {																		//一次走行　一番基本的な初期装備
 	get_wall_info();																	//壁情報の初期化, 後壁はなくなる
 	write_map();																		//地図の初期化
 	make_smap();																	//歩数図の初期化
-	//printf("modeを入力してください　\n");
 	make_route();																	//最短経路探索(route配列に動作が格納される)
-	
-	//ここ以降動作していない模様
-	//printf("modeを入力してください　\n");
-
 	
 	//====探索走行====
 	do {
@@ -179,7 +174,8 @@ void searchL() {
 	//====探索走行====
 	do {
 		smap[PRELOC.AXIS.Y][PRELOC.AXIS.X] = 1;
-		UCHAR smap_temp[4];												// 訪問済み情報を格納。
+		//UCHAR smap_temp[4];												// 訪問済み情報を格納。
+		uint16_t smap_temp[4];												// 訪問済み情報を格納。
 							// 3:Front, 2:Right, 1:Back, 0:Left
 #define set_smap_temp(A,B,C,D) do{smap_temp[0]=A;smap_temp[1]=B;smap_temp[2]=C;smap_temp[3]=D;}while(0)
 
@@ -272,6 +268,7 @@ void searchL() {
 
 	turn_dir(DIR_TURN_180);															//マイクロマウス内部位置情報でも180度回転処理	
 }
+
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
 //adv_pos
@@ -435,7 +432,7 @@ void make_smap()
 	//====歩数マップのクリア====
 	for (y = 0; y <= 0x0f; y++) {													//各Y座標で実行
 		for (x = 0; x <= 0x0f; x++) {												//各X座標で実行
-			smap[y][x] = 0xff;															//未記入部分は歩数最大とする
+			smap[y][x] = 0x02ff;															//未記入部分は歩数最大とする
 		}
 	}
 
@@ -446,7 +443,8 @@ void make_smap()
 	m_step = 0;																			//現在記入した最大の歩数となる
 
 	//====歩数カウンタの重みづけ====
-	int straight = 0;
+	int straight = 3;
+	int turn = 5;
 
 	//====自分の座標にたどり着くまでループ====
 	do {
@@ -461,16 +459,15 @@ void make_smap()
 					}
 					//----北壁についての処理----
 					if (!(m_temp & 0x08) && y != 0x0f) {						//北壁がなく現在最北端でないとき
-					//if (!(map[y][x] & 0x08) && y != 0x0f) {						//北壁がなく現在最北端でないとき
-						if (smap[y + 1][x] == 0xff) {								//北側が未記入なら
-							smap[y + 1][x] = m_step + 2;						//次の歩数を書き込む
+						if (smap[y + 1][x] == 0x02ff) {								//北側が未記入なら
+							smap[y + 1][x] = m_step + turn;						//次の歩数を書き込む
 							
 							for (int k = 1; k < 16-y; k++) {
 								m_temp_sample[k] = map[y + k][x];
 								if (MF.FLAG.SCND) m_temp_sample[k] >>= 4;
 								if (!(m_temp_sample[k] & 0x08) && (y + k) != 0x0f) {						//北壁がなく現在最北端でないとき
-									if (smap[y + k + 1][x] == 0xff) {								//北側が未記入なら
-										smap[y + k + 1][x] = smap[y + k][x] + 1;						//次の歩数を書き込む
+									if (smap[y + k + 1][x] == 0x02ff) {								//北側が未記入なら
+										smap[y + k + 1][x] = smap[y + k][x] + straight;						//次の歩数を書き込む
 									}
 								}
 								else break;
@@ -479,16 +476,15 @@ void make_smap()
 					}
 					//----東壁についての処理----
 					if (!(m_temp & 0x04) && x != 0x0f) {						//東壁がなく現在最東端でないとき
-					//if (!(map[y][x] & 0x40) && y != 0x0f) {						//東壁がなく現在最北端でないとき
-						if (smap[y][x + 1] == 0xff) {								//東側が未記入なら
-							smap[y][x + 1] = m_step + 2;						//次の歩数を書き込む
+						if (smap[y][x + 1] == 0x02ff) {								//東側が未記入なら
+							smap[y][x + 1] = m_step + turn;						//次の歩数を書き込む
 
 							for (int k = 1; k < 16 - x; k++) {
 								m_temp_sample[k] = map[y][x + k];
 								if (MF.FLAG.SCND) m_temp_sample[k] >>= 4;
 								if (!(m_temp_sample[k] & 0x04) && (x + k) != 0x0f) {						//北壁がなく現在最北端でないとき
-									if (smap[y][x + k + 1] == 0xff) {								//北側が未記入なら
-										smap[y][x + k + 1] = smap[y][x + k] + 1;						//次の歩数を書き込む
+									if (smap[y][x + k + 1] == 0x02ff) {								//北側が未記入なら
+										smap[y][x + k + 1] = smap[y][x + k] + straight;						//次の歩数を書き込む
 									}
 								}
 								else break;
@@ -497,16 +493,15 @@ void make_smap()
 					}
 					//----南壁についての処理----
 					if (!(m_temp & 0x02) && y != 0) {							//南壁がなく現在最南端でないとき
-					//if (!(map[y][x] & 0x02) && y != 0) {							//南壁がなく現在最南端でないとき
-						if (smap[y - 1][x] == 0xff) {								//南側が未記入なら
-							smap[y - 1][x] = m_step + 2;							//次の歩数を書き込む
+						if (smap[y - 1][x] == 0x02ff) {								//南側が未記入なら
+							smap[y - 1][x] = m_step + turn;							//次の歩数を書き込む
 
 							for (int k = 1; k < y; k++) {
 								m_temp_sample[k] = map[y - k][x];
 								if (MF.FLAG.SCND) m_temp_sample[k] >>= 4;
 								if (!(m_temp_sample[k] & 0x02) && (y - k) != 0x0f) {						//北壁がなく現在最北端でないとき
-									if (smap[y - k - 1][x] == 0xff) {								//北側が未記入なら
-										smap[y - k - 1][x] = smap[y - k][x] + 1;						//次の歩数を書き込む
+									if (smap[y - k - 1][x] == 0x02ff) {								//北側が未記入なら
+										smap[y - k - 1][x] = smap[y - k][x] + straight;						//次の歩数を書き込む
 									}
 								}
 								else break;
@@ -515,16 +510,15 @@ void make_smap()
 					}
 					//----西壁についての処理----
 					if (!(m_temp & 0x01) && x != 0) {							//西壁がなく現在最西端でないとき
-					//if (!(map[y][x] & 0x01) && x != 0) {							//西壁がなく現在最西端でないとき
-						if (smap[y][x - 1] == 0xff) {								//西側が未記入なら
-							smap[y][x - 1] = m_step + 2;							//次の歩数を書き込む
+						if (smap[y][x - 1] == 0x02ff) {								//西側が未記入なら
+							smap[y][x - 1] = m_step + turn;							//次の歩数を書き込む
 
 							for (int k = 1; k < x; k++) {
 								m_temp_sample[k] = map[y][x - k];
 								if (MF.FLAG.SCND) m_temp_sample[k] >>= 4;
 								if (!(m_temp_sample[k] & 0x01) && (x - k) != 0x0f) {						//北壁がなく現在最北端でないとき
-									if (smap[y][x - k - 1] == 0xff) {								//北側が未記入なら
-										smap[y][x - k - 1] = smap[y][x - k] + 1;						//次の歩数を書き込む
+									if (smap[y][x - k - 1] == 0x02ff) {								//北側が未記入なら
+										smap[y][x - k - 1] = smap[y][x - k] + straight;						//次の歩数を書き込む
 									}
 								}
 								else break;
@@ -536,7 +530,7 @@ void make_smap()
 		}
 		//====歩数カウンタのインクリメント====
 		m_step = m_step + 1;
-	} while (smap[PRELOC.AXIS.Y][PRELOC.AXIS.X] == 0xff);		//現在座標が未記入ではなくなるまで実行
+	} while (smap[PRELOC.AXIS.Y][PRELOC.AXIS.X] == 0x02ff);		//現在座標が未記入ではなくなるまで実行
 }
 
 
@@ -585,21 +579,18 @@ void make_route()
 			if (route_dir == 3) set_priority(3, 0, 1, 2);
 		}
 		else if (m_dir == 1) {	// m_dir = E : E,S,W,N
-			//set_priority(1, 2, 3, 0);
 			if (route_dir == 0) set_priority(1, 2, 3, 0);
 			if (route_dir == 1) set_priority(2, 3, 0, 1);
 			if (route_dir == 2) set_priority(3, 0, 1, 2);
 			if (route_dir == 3) set_priority(0, 1, 2, 3);
 		}
 		else if (m_dir == 2) {	// m_dir = S : S,W,N,E
-			//set_priority(2, 3, 0, 1);
 			if (route_dir == 0) set_priority(2, 3, 0, 1);
 			if (route_dir == 1) set_priority(3, 0, 1, 2);
 			if (route_dir == 2) set_priority(0, 1, 2, 3);
 			if (route_dir == 3) set_priority(1, 2, 3, 0);
 		}
 		else if (m_dir == 3) {	// m_dir = W : W,N,E,S
-			//set_priority(3, 0, 1, 2);
 			if (route_dir == 0) set_priority(3, 0, 1, 2);
 			if (route_dir == 1) set_priority(0, 1, 2, 3);
 			if (route_dir == 2) set_priority(1, 2, 3, 0);

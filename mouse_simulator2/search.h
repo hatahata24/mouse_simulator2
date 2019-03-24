@@ -26,11 +26,10 @@
 //====変数====
 /*グローバル変数の定義*/
 UCHAR map[16][16];											//マップ格納配列
-UCHAR smap[16][16];										//歩数マップ格納配列
-//uint16_t smap[16][16];										//歩数マップ格納配列
+UINT smap[16][16];										//歩数マップ格納配列
 UCHAR wall_info;												//壁情報格納変数
 UCHAR m_dir;													//マウスの方向
-UCHAR m_step;													//歩数格納
+UINT m_step;													//歩数格納
 
 UCHAR m_step2;													//歩数格納
 
