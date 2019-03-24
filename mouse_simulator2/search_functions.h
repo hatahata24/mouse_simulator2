@@ -10,7 +10,6 @@
 #include "macro.h"
 #include "global.h"
 #include "search.h"
-int p = 0;
 
 /*===========================================================
 		探索系関数
@@ -47,13 +46,13 @@ void searchA() {																		//一次走行　一番基本的な初期装備
 		case 0x44:
 			//turn_R90();										//右回転
 			turn_dir(DIR_TURN_R90);											//マイクロマウス内部位置情報でも右回転処理
-			//drive_wait;												//安定するまで待機
+			//drive_wait;										//安定するまで待機
 			break;
 			//----180回転----
 		case 0x22:
 			//turn_180();										//180度回転
 			turn_dir(DIR_TURN_180);											//マイクロマウス内部位置情報でも180度回転処理
-			//drive_wait;												//安定するまで待機
+			//drive_wait;										//安定するまで待機
 			break;
 			//----左折----
 		case 0x11:
@@ -77,8 +76,8 @@ void searchA() {																		//一次走行　一番基本的な初期装備
 	} while ((PRELOC.AXIS.X != goal_x) || (PRELOC.AXIS.Y != goal_y));
 	//現在座標とgoal座標が等しくなるまで実行
 
-	//ms_drive_wait(2000);											//スタートでは***2秒以上***停止しなくてはならない
-	//turn_180();													//180度回転
+	//ms_drive_wait(2000);								//スタートでは***2秒以上***停止しなくてはならない
+	//turn_180();												//180度回転
 	turn_dir(DIR_TURN_180);													//マイクロマウス内部位置情報でも180度回転処理
 }
 
@@ -174,8 +173,7 @@ void searchL() {
 	//====探索走行====
 	do {
 		smap[PRELOC.AXIS.Y][PRELOC.AXIS.X] = 1;
-		//UCHAR smap_temp[4];												// 訪問済み情報を格納。
-		uint16_t smap_temp[4];												// 訪問済み情報を格納。
+		UINT smap_temp[4];													// 訪問済み情報を格納。
 							// 3:Front, 2:Right, 1:Back, 0:Left
 #define set_smap_temp(A,B,C,D) do{smap_temp[0]=A;smap_temp[1]=B;smap_temp[2]=C;smap_temp[3]=D;}while(0)
 
@@ -209,7 +207,6 @@ void searchL() {
 				smap[PRELOC.AXIS.Y - 1][PRELOC.AXIS.X],
 				smap[PRELOC.AXIS.Y][PRELOC.AXIS.X + 1]);
 			break;
-
 		}
 
 		UCHAR dir;
@@ -240,21 +237,17 @@ void searchL() {
 		switch (dir) {
 			//----前進----
 		case 0x88:
-
 			break;
 			//----右折----
 		case 0x44:
-
 			turn_dir(DIR_TURN_R90);
 			break;
 			//----180回転----
 		case 0x22:
-
 			turn_dir(DIR_TURN_180);
 			break;
 			//----左折----
 		case 0x11:
-
 			turn_dir(DIR_TURN_L90);
 			break;
 		}
@@ -266,7 +259,7 @@ void searchL() {
 
 	} while ((PRELOC.AXIS.X != goal_x) || (PRELOC.AXIS.Y != goal_y));
 
-	turn_dir(DIR_TURN_180);															//マイクロマウス内部位置情報でも180度回転処理	
+	turn_dir(DIR_TURN_180);														//マイクロマウス内部位置情報でも180度回転処理	
 }
 
 
@@ -452,22 +445,22 @@ void make_smap()
 		for (y = 0; y <= 0x0f; y++) {												//各Y座標で実行
 			for (x = 0; x <= 0x0f; x++) {											//各X座標で実行
 				//----現在最大の歩数を発見したとき----
-				if (smap[y][x] == m_step) {										//歩数格納変数m_stepの値が現在最大の歩数
+				if (smap[y][x] == m_step) {										//歩数格納変数m_stepの値が現在最大の歩数のとき
 					m_temp = map[y][x];											//map配列からマップデータを取り出す
 					if (MF.FLAG.SCND) {												//二次走行用のマップを作成する場合(二次走行時はMF.FLAG.SCNDをTrueにする)
 						m_temp >>= 4;												//上位4bitを使うので4bit分右にシフトさせる
 					}
 					//----北壁についての処理----
 					if (!(m_temp & 0x08) && y != 0x0f) {						//北壁がなく現在最北端でないとき
-						if (smap[y + 1][x] == 0x02ff) {								//北側が未記入なら
-							smap[y + 1][x] = m_step + turn;						//次の歩数を書き込む
+						if (smap[y + 1][x] == 0x02ff) {							//北側が未記入なら
+							smap[y + 1][x] = smap[y][x] + turn;				//曲線分インクリメントした値を次のマスの歩数マップに書き込む
 							
-							for (int k = 1; k < 16-y; k++) {
-								m_temp_sample[k] = map[y + k][x];
-								if (MF.FLAG.SCND) m_temp_sample[k] >>= 4;
-								if (!(m_temp_sample[k] & 0x08) && (y + k) != 0x0f) {						//北壁がなく現在最北端でないとき
+							for (int k = 1; k < 16-y; k++) {						//現在座標から見て北のマスすべてにおいて
+								m_temp_sample[k] = map[y + k][x];			//map配列からマップデータを取り出す
+								if (MF.FLAG.SCND) m_temp_sample[k] >>= 4;	//二次走行用のマップを作成する場合上位4bitを使うので4bit分右にシフトさせる
+								if (!(m_temp_sample[k] & 0x08) && (y + k) != 0x0f) {			//北壁がなく現在最北端でないとき
 									if (smap[y + k + 1][x] == 0x02ff) {								//北側が未記入なら
-										smap[y + k + 1][x] = smap[y + k][x] + straight;						//次の歩数を書き込む
+										smap[y + k + 1][x] = smap[y + k][x] + straight;			//直線分インクリメントした値を次のマスの歩数マップに書き込む
 									}
 								}
 								else break;
@@ -476,15 +469,15 @@ void make_smap()
 					}
 					//----東壁についての処理----
 					if (!(m_temp & 0x04) && x != 0x0f) {						//東壁がなく現在最東端でないとき
-						if (smap[y][x + 1] == 0x02ff) {								//東側が未記入なら
-							smap[y][x + 1] = m_step + turn;						//次の歩数を書き込む
+						if (smap[y][x + 1] == 0x02ff) {							//東側が未記入なら
+							smap[y][x + 1] = smap[y][x] + turn;				//曲線分インクリメントした値を次のマスの歩数マップに書き込む
 
-							for (int k = 1; k < 16 - x; k++) {
-								m_temp_sample[k] = map[y][x + k];
-								if (MF.FLAG.SCND) m_temp_sample[k] >>= 4;
-								if (!(m_temp_sample[k] & 0x04) && (x + k) != 0x0f) {						//北壁がなく現在最北端でないとき
-									if (smap[y][x + k + 1] == 0x02ff) {								//北側が未記入なら
-										smap[y][x + k + 1] = smap[y][x + k] + straight;						//次の歩数を書き込む
+							for (int k = 1; k < 16 - x; k++) {					//現在座標から見て東のマスすべてにおいて
+								m_temp_sample[k] = map[y][x + k];			//map配列からマップデータを取り出す
+								if (MF.FLAG.SCND) m_temp_sample[k] >>= 4;	//二次走行用のマップを作成する場合上位4bitを使うので4bit分右にシフトさせる
+								if (!(m_temp_sample[k] & 0x04) && (x + k) != 0x0f) {			//東壁がなく現在最東端でないとき
+									if (smap[y][x + k + 1] == 0x02ff) {								//東側が未記入なら
+										smap[y][x + k + 1] = smap[y][x + k] + straight;			//直線分インクリメントした値を次のマスの歩数マップに書き込む
 									}
 								}
 								else break;
@@ -493,15 +486,15 @@ void make_smap()
 					}
 					//----南壁についての処理----
 					if (!(m_temp & 0x02) && y != 0) {							//南壁がなく現在最南端でないとき
-						if (smap[y - 1][x] == 0x02ff) {								//南側が未記入なら
-							smap[y - 1][x] = m_step + turn;							//次の歩数を書き込む
+						if (smap[y - 1][x] == 0x02ff) {							//南側が未記入なら
+							smap[y - 1][x] = smap[y][x] + turn;				//曲線分インクリメントした値を次のマスの歩数マップに書き込む
 
-							for (int k = 1; k < y; k++) {
-								m_temp_sample[k] = map[y - k][x];
-								if (MF.FLAG.SCND) m_temp_sample[k] >>= 4;
-								if (!(m_temp_sample[k] & 0x02) && (y - k) != 0x0f) {						//北壁がなく現在最北端でないとき
-									if (smap[y - k - 1][x] == 0x02ff) {								//北側が未記入なら
-										smap[y - k - 1][x] = smap[y - k][x] + straight;						//次の歩数を書き込む
+							for (int k = 1; k < y; k++) {							//現在座標から見て南のマスすべてにおいて
+								m_temp_sample[k] = map[y - k][x];			//map配列からマップデータを取り出す
+								if (MF.FLAG.SCND) m_temp_sample[k] >>= 4;	//二次走行用のマップを作成する場合上位4bitを使うので4bit分右にシフトさせる
+								if (!(m_temp_sample[k] & 0x02) && (y - k) != 0x0f) {			//南壁がなく現在最南端でないとき
+									if (smap[y - k - 1][x] == 0x02ff) {									//南側が未記入なら
+										smap[y - k - 1][x] = smap[y - k][x] + straight;			//直線分インクリメントした値を次のマスの歩数マップに書き込む
 									}
 								}
 								else break;
@@ -510,15 +503,15 @@ void make_smap()
 					}
 					//----西壁についての処理----
 					if (!(m_temp & 0x01) && x != 0) {							//西壁がなく現在最西端でないとき
-						if (smap[y][x - 1] == 0x02ff) {								//西側が未記入なら
-							smap[y][x - 1] = m_step + turn;							//次の歩数を書き込む
+						if (smap[y][x - 1] == 0x02ff) {							//西側が未記入なら
+							smap[y][x - 1] = smap[y][x] + turn;				//次の歩数を書き込む
 
-							for (int k = 1; k < x; k++) {
-								m_temp_sample[k] = map[y][x - k];
-								if (MF.FLAG.SCND) m_temp_sample[k] >>= 4;
-								if (!(m_temp_sample[k] & 0x01) && (x - k) != 0x0f) {						//北壁がなく現在最北端でないとき
-									if (smap[y][x - k - 1] == 0x02ff) {								//北側が未記入なら
-										smap[y][x - k - 1] = smap[y][x - k] + straight;						//次の歩数を書き込む
+							for (int k = 1; k < x; k++) {							//現在座標から見て西のマスすべてにおいて
+								m_temp_sample[k] = map[y][x - k];			//map配列からマップデータを取り出す
+								if (MF.FLAG.SCND) m_temp_sample[k] >>= 4;	//二次走行用のマップを作成する場合上位4bitを使うので4bit分右にシフトさせる
+								if (!(m_temp_sample[k] & 0x01) && (x - k) != 0x0f) {			//西壁がなく現在最西端でないとき
+									if (smap[y][x - k - 1] == 0x02ff) {									//西側が未記入なら
+										smap[y][x - k - 1] = smap[y][x - k] + straight;			//直線分インクリメントした値を次のマスの歩数マップに書き込む
 									}
 								}
 								else break;
@@ -529,7 +522,7 @@ void make_smap()
 			}
 		}
 		//====歩数カウンタのインクリメント====
-		m_step = m_step + 1;
+		m_step++;
 	} while (smap[PRELOC.AXIS.Y][PRELOC.AXIS.X] == 0x02ff);		//現在座標が未記入ではなくなるまで実行
 }
 
@@ -576,25 +569,25 @@ void make_route()
 			if (route_dir == 0) set_priority(0, 1, 2, 3);
 			if (route_dir == 1) set_priority(1, 2, 3, 0);
 			if (route_dir == 2) set_priority(2, 3, 0, 1);
-			if (route_dir == 3) set_priority(3, 0, 1, 2);
+			if (route_dir == 3) set_priority(3, 0, 1, 2);						//route_dirに入力した優先方向に応じて条件分岐
 		}
 		else if (m_dir == 1) {	// m_dir = E : E,S,W,N
 			if (route_dir == 0) set_priority(1, 2, 3, 0);
 			if (route_dir == 1) set_priority(2, 3, 0, 1);
 			if (route_dir == 2) set_priority(3, 0, 1, 2);
-			if (route_dir == 3) set_priority(0, 1, 2, 3);
+			if (route_dir == 3) set_priority(0, 1, 2, 3);						//route_dirに入力した優先方向に応じて条件分岐
 		}
 		else if (m_dir == 2) {	// m_dir = S : S,W,N,E
 			if (route_dir == 0) set_priority(2, 3, 0, 1);
 			if (route_dir == 1) set_priority(3, 0, 1, 2);
 			if (route_dir == 2) set_priority(0, 1, 2, 3);
-			if (route_dir == 3) set_priority(1, 2, 3, 0);
+			if (route_dir == 3) set_priority(1, 2, 3, 0);						//route_dirに入力した優先方向に応じて条件分岐
 		}
 		else if (m_dir == 3) {	// m_dir = W : W,N,E,S
 			if (route_dir == 0) set_priority(3, 0, 1, 2);
 			if (route_dir == 1) set_priority(0, 1, 2, 3);
 			if (route_dir == 2) set_priority(1, 2, 3, 0);
-			if (route_dir == 3) set_priority(2, 3, 0, 1);
+			if (route_dir == 3) set_priority(2, 3, 0, 1);						//route_dirに入力した優先方向に応じて条件分岐
 		}
 
 		UCHAR j;
