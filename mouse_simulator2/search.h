@@ -30,10 +30,12 @@ UINT smap[16][16];										//歩数マップ格納配列
 UCHAR wall_info;												//壁情報格納変数
 UCHAR m_dir;													//マウスの方向
 UINT m_step;													//歩数格納
-
-UCHAR m_step2;													//歩数格納
+UINT m_step2;													//仮ゴールの歩数格納
 
 UINT goal_x, goal_y;											//ゴール座標
+UINT pregoal_x, pregoal_y;								//仮ゴール座標
+UINT allmap_flag;
+
 UCHAR route[256];											//最短経路格納配列
 UCHAR r_cnt;													//経路カウンタ
 
@@ -50,5 +52,7 @@ void write_map();												//マップ書き込み
 void turn_dir(UCHAR);										//自機方向情報変更
 void make_smap();											//歩数マップ作成
 void make_route();											//最短経路検索
+void find_pregoal();											//歩数マップ作成
+void make_pregoal_route();											//最短経路検索
 
 #endif

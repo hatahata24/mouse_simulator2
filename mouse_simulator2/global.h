@@ -63,6 +63,7 @@ union map_coor {										//共用体の宣言
 		UCHAR Y : 4;										//Y座標
 	}AXIS;
 };
+
 #endif
 
 /*グローバル変数の定義*/
