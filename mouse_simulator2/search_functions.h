@@ -91,89 +91,18 @@ void searchA() {																		//一次走行　一番基本的な初期装備
 // 引数：なし
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
-/*void searchB() {																		//一次走行　一番基本的な初期装備
-
-	//====マップデータ初期化====
-	//map_Init();																		//マップデータを初期化する
-
-	int i = 0;
-
-	do {
-		//====歩数等初期化====
-		m_step = r_cnt = 0;															//歩数と経路カウンタの初期化
-		find_pregoal();																	//仮goalまでの歩数マップの初期化
-		make_pregoal_route();														//未知壁を含む仮goalまでのルート探索(route配列に動作が格納される)
-		//====探索走行====
-		do {
-			//----進行----
-			switch (route[r_cnt++]) {												//route配列によって進行を決定。経路カウンタを進める
-				//----前進----
-			case 0x88:
-				break;
-				//----右折----
-			case 0x44:
-				//turn_R90();										//右回転
-				turn_dir(DIR_TURN_R90);											//マイクロマウス内部位置情報でも右回転処理
-				//drive_wait;												//安定するまで待機
-				break;
-				//----180回転----
-			case 0x22:
-				//turn_180();										//180度回転
-				turn_dir(DIR_TURN_180);											//マイクロマウス内部位置情報でも180度回転処理
-				//drive_wait;												//安定するまで待機
-				break;
-				//----左折----
-			case 0x11:
-				//turn_L90();										//左回転
-				turn_dir(DIR_TURN_L90);											//マイクロマウス内部位置情報でも左回転処理
-				//drive_wait;										//安定するまで待機
-				break;
-			}
-			//drive_wait;											//安定するまで待機
-			//one_section();										//前進する
-			//drive_wait;											//安定するまで待機
-			adv_pos();																		//マイクロマウス内部位置情報でも前進処理
-			//get_wall_info();				// 探索シュミレータ用に追加
-			print_m_location();		// 探索シュミレータ用に追加
-			//conf_route();																//最短経路で進行可能か判定
-
-		} while ((PRELOC.AXIS.X != pregoal_x) || (PRELOC.AXIS.Y != pregoal_y));		//現在座標と仮goal座標が等しくなるまで実行
-
-		//ms_drive_wait(2000);								//スタートでは***2秒以上***停止しなくてはならない
-		//turn_180();												//180度回転
-		//turn_dir(DIR_TURN_180);												//マイクロマウス内部位置情報でも180度回転処理
-
-		get_wall_info();																	//壁情報の初期化, 後壁はなくなる
-		write_map();																		//地図の初期化
-
-		i++;
-
-	} while (i < 3);
-}*/
-
-
-/*-----------------------------------------------------------
-		足立法探索走行β(全面探索走行)
------------------------------------------------------------*/
-//+++++++++++++++++++++++++++++++++++++++++++++++
-//searchB
-//	複数の仮goal座標に足立法で進み全面探索を目指す
-// 引数：なし
-// 戻り値：なし
-//+++++++++++++++++++++++++++++++++++++++++++++++
 void searchB() {																		//一次走行　一番基本的な初期装備
 
 	//====マップデータ初期化====
 	//map_Init();																		//マップデータを初期化する
 
 	int i = 0;
-	allmap_flag = 1;
 
 	do {
 		//====歩数等初期化====
 		m_step = r_cnt = 0;															//歩数と経路カウンタの初期化
 		find_pregoal();																	//仮goalまでの歩数マップの初期化
-		make_smap();
+		make_smap2();
 		make_route();																	//最短経路探索(route配列に動作が格納される)
 		//====探索走行====
 		do {
@@ -220,7 +149,7 @@ void searchB() {																		//一次走行　一番基本的な初期装備
 
 		i++;
 
-	} while (i < 1);
+	} while (i < 130);
 }
 
 
@@ -509,8 +438,7 @@ void make_smap()
 	}
 
 	//====ゴール座標を0にする====
-	if (allmap_flag) smap[pregoal_y][pregoal_x];
-	else smap[goal_y][goal_x] = 0;
+	smap[goal_y][goal_x] = 0;
 
 	//====歩数カウンタを0にする====
 	m_step = 0;																			//現在記入した最大の歩数となる
@@ -835,248 +763,70 @@ void find_pregoal()
 
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
-//make_pregoal_route
-//	未探索壁を有するマス(=仮goal)への最短経路を導出する
+//make_smap2
+//	歩数マップを作成する
 // 引数：なし
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
-/*void make_pregoal_route()
+void make_smap2()
 {
 	//====変数宣言====
-	UCHAR i = 0;																			//カウンタ
-	UCHAR x, y;																			//X、Y座標
-	UCHAR dir_temp = m_dir;														//方向の保管用変数
+	UCHAR x, y;																			//for文用変数
 	UCHAR m_temp;																	//マップデータ一時保持
 
-	//====最短経路を初期化====
-	do {
-		route[i++] = 0xff;																//routeを初期化、iをインクリメント
-	} while (i != 0);																		//iが0でない間実行(iがオーバーフローして0になるまで実行？)
+	//====歩数マップのクリア====
+	for (y = 0; y <= 0x0f; y++) {													//各Y座標で実行
+		for (x = 0; x <= 0x0f; x++) {												//各X座標で実行
+			smap[y][x] = 0x03e7;													//未記入部分は歩数最大とする
+		}
+	}
 
-	//====歩数カウンタをセット====
-	m_step = smap[PRELOC.AXIS.Y][PRELOC.AXIS.X];					//現在座標の歩数マップ値を取得
-
-	//====x, yに現在座標を書き込み====
-	x = (UCHAR)PRELOC.AXIS.X;
-	y = (UCHAR)PRELOC.AXIS.Y;
-
-	//====最短経路を導出====
-	do {
-		m_temp = map[y][x];														//比較用マップ情報の格納
+	//====仮ゴール座標を0にする====
+	smap[pregoal_y][pregoal_x] = 0;
 	
-		//m_dir ... N : 0, W : 1, S : 2, E : 3
-		UCHAR priority[4];																// 探索優先順を格納する変数
-																								// 初期状態だと，N,E,S,Wの順に優先度が高い
-#define set_priority(A,B,C,D) do{priority[0]=A;priority[1]=B;priority[2]=C;priority[3]=D;}while(0)
+	//====歩数カウンタを0にする====
+	m_step = 0;																			//現在記入した最大の歩数となる
 
-		if (m_dir == 0) {			// m_dir = N : N,E,S,W
-			if (route_dir == 0) set_priority(0, 1, 2, 3);
-			if (route_dir == 1) set_priority(1, 2, 3, 0);
-			if (route_dir == 2) set_priority(2, 3, 0, 1);
-			if (route_dir == 3) set_priority(3, 0, 1, 2);						//route_dirに入力した優先方向に応じて条件分岐
-		}
-		else if (m_dir == 1) {	// m_dir = E : E,S,W,N
-			if (route_dir == 0) set_priority(1, 2, 3, 0);
-			if (route_dir == 1) set_priority(2, 3, 0, 1);
-			if (route_dir == 2) set_priority(3, 0, 1, 2);
-			if (route_dir == 3) set_priority(0, 1, 2, 3);						//route_dirに入力した優先方向に応じて条件分岐
-		}
-		else if (m_dir == 2) {	// m_dir = S : S,W,N,E
-			if (route_dir == 0) set_priority(2, 3, 0, 1);
-			if (route_dir == 1) set_priority(3, 0, 1, 2);
-			if (route_dir == 2) set_priority(0, 1, 2, 3);
-			if (route_dir == 3) set_priority(1, 2, 3, 0);						//route_dirに入力した優先方向に応じて条件分岐
-		}
-		else if (m_dir == 3) {	// m_dir = W : W,N,E,S
-			if (route_dir == 0) set_priority(3, 0, 1, 2);
-			if (route_dir == 1) set_priority(0, 1, 2, 3);
-			if (route_dir == 2) set_priority(1, 2, 3, 0);
-			if (route_dir == 3) set_priority(2, 3, 0, 1);						//route_dirに入力した優先方向に応じて条件分岐
-		}
+	//====歩数カウンタの重みづけ====
+	int straight = 3;
+	int turn = 5;
 
-		UCHAR j;
-		for (j = 0; j < 4; j++) {
-			if (priority[j] == 0) {			//----北を見る----
-				if (!(m_temp & 0x08) && (smap[y + 1][x] > m_step) && (smap[y + 1][x] < 999)) {	//北側に壁が無く、現在地より大きい歩数マップ値であれば
-					route[i] = (0x00 - m_dir) & 0x03;								//route配列に進行方向を記録
-					m_step = smap[y + 1][x];											//最大歩数マップ値を更新
-					y++;																			//北に進んだのでY座標をインクリメント
-					break;
-				}
-			}
-			else if (priority[j] == 1) {		//----東を見る----
-				if (!(m_temp & 0x04) && (smap[y][x + 1] > m_step) && (smap[y][x + 1] < 999)) {	//東側に壁が無く、現在地より大きい歩数マップ値であれば
-					route[i] = (0x01 - m_dir) & 0x03;								//route配列に進行方向を記録
-					m_step = smap[y][x + 1];											//最大歩数マップ値を更新
-					x++;																			//東に進んだのでX座標をインクリメント
-					break;
-				}
-			}
-			else if (priority[j] == 2) {		//----南を見る----
-				if (!(m_temp & 0x02) && (smap[y - 1][x] > m_step) && (smap[y - 1][x] < 999)) {	//南側に壁が無く、現在地より大きい歩数マップ値であれば
-					route[i] = (0x02 - m_dir) & 0x03;								//route配列に進行方向を記録
-					m_step = smap[y - 1][x];											//最大歩数マップ値を更新
-					y--;																			//南に進んだのでY座標をデクリメント
-					break;
-				}
-			}
-			else if (priority[j] == 3) {		//----西を見る----
-				if (!(m_temp & 0x01) && (smap[y][x - 1] > m_step) && (smap[y][x - 1] < 999)) {	//西側に壁が無く、現在地より大きい歩数マップ値であれば
-					route[i] = (0x03 - m_dir) & 0x03;								//route配列に進行方向を記録
-					m_step = smap[y][x - 1];											//最大歩数マップ値を更新
-					x--;																			//西に進んだのでX座標をデクリメント
-					break;
-				}
-			}
-		}
-
-		//----格納データ形式変更----
-		switch (route[i]) {																	//route配列に格納した要素値で分岐
-		case 0x00:																				//前進する場合
-			route[i] = 0x88;																	//格納データ形式を変更
-			break;
-		case 0x01:																				//右折する場合
-			turn_dir(DIR_TURN_R90);													//内部情報の方向を90度右回転
-			route[i] = 0x44;																	//格納データ形式を変更
-			break;
-		case 0x02:																				//Uターンする場合
-			turn_dir(DIR_TURN_180);													//内部情報の方向を180度回転
-			route[i] = 0x22;																	//格納データ形式を変更
-			break;
-		case 0x03:																				//左折する場合
-			turn_dir(DIR_TURN_L90);													//内部情報の方向を90度右回転
-			route[i] = 0x11;																	//格納データ形式を変更
-			break;
-		default:																					//それ以外の場合
-			route[i] = 0x00;																	//格納データ形式を変更
-			break;
-		}
-		i++;																						//カウンタをインクリメント
-	} while (smap[y][x] != m_step2 || ((map[y][x] & 0x0f) << 4) == (map[y][x] & 0xf0));	//進んだ先の歩数マップ値がm_step2(=仮ゴール)になり、かつ壁マップが道壁を含むまで実行
-	//} while (x !=  pregoal_x && y !=  pregoal_y);							//座標が仮goalの座標と一致するまで実行
-	m_dir = dir_temp;																		//方向を始めの状態に戻す
-}
-*/
-
-//+++++++++++++++++++++++++++++++++++++++++++++++
-//make_pregoal_route
-//	未探索壁を有するマス(=仮goal)への最短経路を導出する
-// 引数：なし
-// 戻り値：なし
-//+++++++++++++++++++++++++++++++++++++++++++++++
-void make_pregoal_route()
-{
-	//====変数宣言====
-	UCHAR i = 0;																			//カウンタ
-	UCHAR x, y;																			//X、Y座標
-	UCHAR dir_temp = m_dir;														//方向の保管用変数
-	UCHAR m_temp;																	//マップデータ一時保持
-
-	//====最短経路を初期化====
+	//====自分の座標にたどり着くまでループ====
 	do {
-		route[i++] = 0xff;																//routeを初期化、iをインクリメント
-	} while (i != 0);																		//iが0でない間実行(iがオーバーフローして0になるまで実行？)
-
-	//====歩数カウンタをセット====
-	m_step = smap[PRELOC.AXIS.Y][PRELOC.AXIS.X];					//現在座標の歩数マップ値を取得
-
-	//====x, yに現在座標を書き込み====
-	x = (UCHAR)PRELOC.AXIS.X;
-	y = (UCHAR)PRELOC.AXIS.Y;
-
-	//====最短経路を導出====
-	do {
-		m_temp = map[y][x];														//比較用マップ情報の格納
-
-		//m_dir ... N : 0, W : 1, S : 2, E : 3
-		UCHAR priority[4];																// 探索優先順を格納する変数
-																								// 初期状態だと，N,E,S,Wの順に優先度が高い
-#define set_priority(A,B,C,D) do{priority[0]=A;priority[1]=B;priority[2]=C;priority[3]=D;}while(0)
-
-		if (m_dir == 0) {			// m_dir = N : N,E,S,W
-			if (route_dir == 0) set_priority(0, 1, 2, 3);
-			if (route_dir == 1) set_priority(1, 2, 3, 0);
-			if (route_dir == 2) set_priority(2, 3, 0, 1);
-			if (route_dir == 3) set_priority(3, 0, 1, 2);						//route_dirに入力した優先方向に応じて条件分岐
-		}
-		else if (m_dir == 1) {	// m_dir = E : E,S,W,N
-			if (route_dir == 0) set_priority(1, 2, 3, 0);
-			if (route_dir == 1) set_priority(2, 3, 0, 1);
-			if (route_dir == 2) set_priority(3, 0, 1, 2);
-			if (route_dir == 3) set_priority(0, 1, 2, 3);						//route_dirに入力した優先方向に応じて条件分岐
-		}
-		else if (m_dir == 2) {	// m_dir = S : S,W,N,E
-			if (route_dir == 0) set_priority(2, 3, 0, 1);
-			if (route_dir == 1) set_priority(3, 0, 1, 2);
-			if (route_dir == 2) set_priority(0, 1, 2, 3);
-			if (route_dir == 3) set_priority(1, 2, 3, 0);						//route_dirに入力した優先方向に応じて条件分岐
-		}
-		else if (m_dir == 3) {	// m_dir = W : W,N,E,S
-			if (route_dir == 0) set_priority(3, 0, 1, 2);
-			if (route_dir == 1) set_priority(0, 1, 2, 3);
-			if (route_dir == 2) set_priority(1, 2, 3, 0);
-			if (route_dir == 3) set_priority(2, 3, 0, 1);						//route_dirに入力した優先方向に応じて条件分岐
-		}
-
-		UCHAR j;
-		for (j = 0; j < 4; j++) {
-			if (priority[j] == 0) {			//----北を見る----
-				if (!(m_temp & 0x08) && (smap[y + 1][x] > m_step) && (smap[y + 1][x] < 999)) {	//北側に壁が無く、現在地より大きい歩数マップ値であれば
-					route[i] = (0x00 - m_dir) & 0x03;								//route配列に進行方向を記録
-					m_step = smap[y + 1][x];											//最大歩数マップ値を更新
-					y++;																			//北に進んだのでY座標をインクリメント
-					break;
-				}
-			}
-			else if (priority[j] == 1) {		//----東を見る----
-				if (!(m_temp & 0x04) && (smap[y][x + 1] > m_step) && (smap[y][x + 1] < 999)) {	//東側に壁が無く、現在地より大きい歩数マップ値であれば
-					route[i] = (0x01 - m_dir) & 0x03;								//route配列に進行方向を記録
-					m_step = smap[y][x + 1];											//最大歩数マップ値を更新
-					x++;																			//東に進んだのでX座標をインクリメント
-					break;
-				}
-			}
-			else if (priority[j] == 2) {		//----南を見る----
-				if (!(m_temp & 0x02) && (smap[y - 1][x] > m_step) && (smap[y - 1][x] < 999)) {	//南側に壁が無く、現在地より大きい歩数マップ値であれば
-					route[i] = (0x02 - m_dir) & 0x03;								//route配列に進行方向を記録
-					m_step = smap[y - 1][x];											//最大歩数マップ値を更新
-					y--;																			//南に進んだのでY座標をデクリメント
-					break;
-				}
-			}
-			else if (priority[j] == 3) {		//----西を見る----
-				if (!(m_temp & 0x01) && (smap[y][x - 1] > m_step) && (smap[y][x - 1] < 999)) {	//西側に壁が無く、現在地より大きい歩数マップ値であれば
-					route[i] = (0x03 - m_dir) & 0x03;								//route配列に進行方向を記録
-					m_step = smap[y][x - 1];											//最大歩数マップ値を更新
-					x--;																			//西に進んだのでX座標をデクリメント
-					break;
+		//----マップ全域を捜索----
+		for (y = 0; y <= 0x0f; y++) {												//各Y座標で実行
+			for (x = 0; x <= 0x0f; x++) {											//各X座標で実行
+				//----現在最大の歩数を発見したとき----
+				if (smap[y][x] == m_step) {										//歩数格納変数m_stepの値が現在最大の歩数のとき
+					m_temp = map[y][x];											//map配列からマップデータを取り出す
+					//----北壁についての処理----
+					if (!(m_temp & 0x08) && y != 0x0f) {						//北壁がなく現在最北端でないとき
+						if (smap[y + 1][x] == 0x03e7) {							//北側が未記入なら
+							smap[y + 1][x] = smap[y][x] + turn;				//曲線分インクリメントした値を次のマスの歩数マップに書き込む
+						}
+					}
+					//----東壁についての処理----
+					if (!(m_temp & 0x04) && x != 0x0f) {						//東壁がなく現在最東端でないとき
+						if (smap[y][x + 1] == 0x03e7) {							//東側が未記入なら
+							smap[y][x + 1] = smap[y][x] + turn;				//曲線分インクリメントした値を次のマスの歩数マップに書き込む
+						}
+					}
+					//----南壁についての処理----
+					if (!(m_temp & 0x02) && y != 0) {							//南壁がなく現在最南端でないとき
+						if (smap[y - 1][x] == 0x03e7) {							//南側が未記入なら
+							smap[y - 1][x] = smap[y][x] + turn;				//曲線分インクリメントした値を次のマスの歩数マップに書き込む
+						}
+					}
+					//----西壁についての処理----
+					if (!(m_temp & 0x01) && x != 0) {							//西壁がなく現在最西端でないとき
+						if (smap[y][x - 1] == 0x03e7) {							//西側が未記入なら
+							smap[y][x - 1] = smap[y][x] + turn;				//次の歩数を書き込む
+						}
+					}
 				}
 			}
 		}
-
-		//----格納データ形式変更----
-		switch (route[i]) {																	//route配列に格納した要素値で分岐
-		case 0x00:																				//前進する場合
-			route[i] = 0x88;																	//格納データ形式を変更
-			break;
-		case 0x01:																				//右折する場合
-			turn_dir(DIR_TURN_R90);													//内部情報の方向を90度右回転
-			route[i] = 0x44;																	//格納データ形式を変更
-			break;
-		case 0x02:																				//Uターンする場合
-			turn_dir(DIR_TURN_180);													//内部情報の方向を180度回転
-			route[i] = 0x22;																	//格納データ形式を変更
-			break;
-		case 0x03:																				//左折する場合
-			turn_dir(DIR_TURN_L90);													//内部情報の方向を90度右回転
-			route[i] = 0x11;																	//格納データ形式を変更
-			break;
-		default:																					//それ以外の場合
-			route[i] = 0x00;																	//格納データ形式を変更
-			break;
-		}
-		i++;																						//カウンタをインクリメント
-	} while (smap[y][x] != m_step2 || ((map[y][x] & 0x0f) << 4) == (map[y][x] & 0xf0));	//進んだ先の歩数マップ値がm_step2(=仮ゴール)になり、かつ壁マップが道壁を含むまで実行
-	//} while (x !=  pregoal_x && y !=  pregoal_y);							//座標が仮goalの座標と一致するまで実行
-	m_dir = dir_temp;																		//方向を始めの状態に戻す
+		//====歩数カウンタのインクリメント====
+		m_step++;
+	} while (smap[PRELOC.AXIS.Y][PRELOC.AXIS.X] == 0x03e7);		//現在座標が未記入ではなくなるまで実行
 }

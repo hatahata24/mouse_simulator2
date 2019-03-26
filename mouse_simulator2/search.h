@@ -54,5 +54,6 @@ void make_smap();											//歩数マップ作成
 void make_route();											//最短経路検索
 void find_pregoal();											//歩数マップ作成
 void make_pregoal_route();											//最短経路検索
+void make_smap2();											//歩数マップ作成
 
 #endif
