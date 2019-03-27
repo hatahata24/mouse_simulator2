@@ -34,7 +34,7 @@ UINT m_step2;													//仮ゴールの歩数格納
 
 UINT goal_x, goal_y;											//ゴール座標
 UINT pregoal_x, pregoal_y;								//仮ゴール座標
-UINT allmap_flag;
+UINT allmap_flag;												//全マップ探索完了のフラグ
 
 UCHAR route[256];											//最短経路格納配列
 UCHAR r_cnt;													//経路カウンタ

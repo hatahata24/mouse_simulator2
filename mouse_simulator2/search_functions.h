@@ -103,6 +103,7 @@ void searchB() {																		//一次走行　一番基本的な初期装備
 		//====歩数等初期化====
 		m_step = r_cnt = 0;															//歩数と経路カウンタの初期化
 		find_pregoal();																	//仮goalまでの歩数マップの初期化
+		if (allmap_flag == 1) break;
 		make_smap2();
 		make_route();																	//最短経路探索(route配列に動作が格納される)
 		//====探索走行====
@@ -677,7 +678,7 @@ void find_pregoal()
 	UCHAR x, y;																			//for文用変数
 	UCHAR m_temp;																	//マップデータ一時保持
 	//UCHAR m_temp_sample[16];
-	int break_flag = 0;
+	INT break_flag = 0;																	//未知壁マスを見つけた時のループ脱出フラグ
 
 	//====歩数マップのクリア====
 	for (y = 0; y <= 0x0f; y++) {													//各Y座標で実行
@@ -762,7 +763,8 @@ void find_pregoal()
 		}
 		//====歩数カウンタのインクリメント====
 		m_step++;
-	} while (break_flag == 0);		//未探索壁ありマスを見つけるまで実行
+		if (m_step > 500) allmap_flag = 1;
+	} while (break_flag == 0 && allmap_flag != 1);		//未探索壁ありマスを見つけるまで実行
 }
 
 
