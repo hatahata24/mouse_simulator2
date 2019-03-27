@@ -97,6 +97,7 @@ void searchB() {																		//一次走行　一番基本的な初期装備
 	//map_Init();																		//マップデータを初期化する
 
 	int i = 0;
+	int j = 0;
 
 	do {
 		//====歩数等初期化====
@@ -137,6 +138,8 @@ void searchB() {																		//一次走行　一番基本的な初期装備
 			//get_wall_info();				// 探索シュミレータ用に追加
 			print_m_location();		// 探索シュミレータ用に追加
 			//conf_route();																//最短経路で進行可能か判定
+			j++;
+			if (j > 150) break;										//移動マス数が150以上になった場合全面探索を中止
 
 		} while ((PRELOC.AXIS.X != pregoal_x) || (PRELOC.AXIS.Y != pregoal_y));		//現在座標と仮goal座標が等しくなるまで実行
 
@@ -147,6 +150,7 @@ void searchB() {																		//一次走行　一番基本的な初期装備
 		get_wall_info();																	//壁情報の初期化, 後壁はなくなる
 		write_map();																		//地図の初期化
 
+		if (j > 150) break;											//移動マス数が150以上になった場合全面探索を中止
 		i++;
 
 	} while (i < 130);
